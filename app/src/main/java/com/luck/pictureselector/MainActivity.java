@@ -1929,6 +1929,9 @@ public class MainActivity extends AppCompatActivity implements IBridgePictureBeh
                 chooseMode = SelectMimeType.ofAudio();
                 cb_preview_audio.setVisibility(View.VISIBLE);
                 break;
+            case R.id.rb_document:
+                chooseMode = SelectMimeType.ofDocument();
+                break;
             case R.id.rb_glide:
                 imageEngine = GlideEngine.createGlideEngine();
                 break;

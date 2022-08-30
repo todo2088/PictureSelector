@@ -300,6 +300,11 @@ public final class PictureMimeType {
     public final static String MIME_TYPE_PREFIX_IMAGE = "image";
     public final static String MIME_TYPE_PREFIX_VIDEO = "video";
     public final static String MIME_TYPE_PREFIX_AUDIO = "audio";
+    public final static String MIME_TYPE_PREFIX_DOCUMENT_DOC = "doc";
+    public final static String MIME_TYPE_PREFIX_DOCUMENT_PPT= "ppt";
+    public final static String MIME_TYPE_PREFIX_DOCUMENT_XLS = "xls";
+    public final static String MIME_TYPE_PREFIX_DOCUMENT_PDF = "pdf";
+    public final static String MIME_TYPE_PREFIX_DOCUMENT_TXT = "txt";
 
     private final static String MIME_TYPE_PNG = "image/png";
     public final static String MIME_TYPE_JPEG = "image/jpeg";

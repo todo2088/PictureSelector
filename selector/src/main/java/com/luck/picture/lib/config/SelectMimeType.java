@@ -1,5 +1,7 @@
 package com.luck.picture.lib.config;
 
+import android.provider.MediaStore;
+
 /**
  * @author：luck
  * @date：2021/11/23 6:53 下午
@@ -42,12 +44,16 @@ public class SelectMimeType {
     public static int ofAudio() {
         return TYPE_AUDIO;
     }
+    public static int ofDocument() {
+        return TYPE_DOCUMENT;
+    }
 
 
     public final static int TYPE_ALL = 0;
     public final static int TYPE_IMAGE = 1;
     public final static int TYPE_VIDEO = 2;
     public final static int TYPE_AUDIO = 3;
+    public final static int TYPE_DOCUMENT = 6;
 
     /**
      * System all image or video album

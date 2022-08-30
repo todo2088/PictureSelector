@@ -475,6 +475,14 @@
                         android:text="音频"
                         android:textColor="@color/app_color_53575e"
                         android:textSize="14sp" />
+
+                    <RadioButton
+                        android:id="@+id/rb_document"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="文档"
+                        android:textColor="@color/app_color_53575e"
+                        android:textSize="14sp" />
                 </RadioGroup>
 
                 <CheckBox

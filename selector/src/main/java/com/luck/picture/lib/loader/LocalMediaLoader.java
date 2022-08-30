@@ -1,8 +1,10 @@
 package com.luck.picture.lib.loader;
 
 import android.database.Cursor;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.luck.picture.lib.R;
 import com.luck.picture.lib.config.FileSizeUnit;
@@ -21,6 +23,7 @@ import com.luck.picture.lib.utils.SdkVersionUtils;
 import com.luck.picture.lib.utils.SortUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -71,6 +74,27 @@ public final class LocalMediaLoader extends IBridgeMediaLoader {
                 sizeCondition;
     }
 
+    private static String getSelectionArgsForDocumentCondition(String sizeCondition, String queryMimeCondition) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//            stringBuilder.append(MediaStore.Files.FileColumns.MEDIA_TYPE)
+//                    .append("=?")
+//                    .append(" AND ");
+            stringBuilder.append(sizeCondition);
+            if (!TextUtils.isEmpty(queryMimeCondition)) {
+                stringBuilder.append(" AND ( ").append(queryMimeCondition).append(" ) ");
+            }
+        } else {
+            stringBuilder.append(MediaStore.Files.FileColumns.MEDIA_TYPE)
+                    .append("=").append(MediaStore.Files.FileColumns.MEDIA_TYPE_NONE)
+                    .append(" AND ").append(sizeCondition);
+            if (!TextUtils.isEmpty(queryMimeCondition)) {
+                stringBuilder.append(" AND ( ").append(queryMimeCondition).append(" ) ");
+            }
+        }
+        return stringBuilder.toString();
+    }
+
     /**
      * Query conditions in image modes
      *
@@ -90,8 +114,16 @@ public final class LocalMediaLoader extends IBridgeMediaLoader {
             @Override
             public List<LocalMediaFolder> doInBackground() {
                 List<LocalMediaFolder> imageFolders = new ArrayList<>();
+                String selection = getSelection();
+                String[] selectionArgs = getSelectionArgs();
+                String sortOrder = getSortOrder();
+                Log.d("loadAllAlbum", selection);
+                if (selectionArgs != null) {
+                    Log.d("loadAllAlbum", Arrays.toString(selectionArgs));
+                }
+                Log.d("loadAllAlbum", sortOrder);
                 Cursor data = getContext().getContentResolver().query(QUERY_URI, PROJECTION,
-                        getSelection(), getSelectionArgs(), getSortOrder());
+                        selection, selectionArgs, sortOrder);
                 try {
                     if (data != null) {
                         LocalMediaFolder allImageFolder = new LocalMediaFolder();
@@ -219,6 +251,9 @@ public final class LocalMediaLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 // Access to the audio
                 return getSelectionArgsForAudioMediaCondition(durationCondition, queryMimeCondition);
+            case SelectMimeType.TYPE_DOCUMENT:
+                // Access to the audio
+                return getSelectionArgsForDocumentCondition(fileSizeCondition, queryMimeCondition);
         }
         return null;
     }
@@ -240,6 +275,11 @@ public final class LocalMediaLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 // Get audio
                 return new String[]{String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO)};
+            case SelectMimeType.TYPE_DOCUMENT:
+                // Get document
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                    return new String[]{String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_DOCUMENT)};
+//                }
         }
         return null;
     }

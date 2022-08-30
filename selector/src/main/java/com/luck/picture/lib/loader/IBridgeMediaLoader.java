@@ -3,6 +3,7 @@ package com.luck.picture.lib.loader;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * @author：luck
@@ -39,6 +41,58 @@ public abstract class IBridgeMediaLoader {
     protected static final int MAX_SORT_SIZE = 60;
     private Context mContext;
     private PictureSelectionConfig mConfig;
+    protected static final String text = " (" + MediaStore.MediaColumns.MIME_TYPE + " like 'text/%')";
+    protected static final String[][] MIME_MAP_TABLE_DOCUMENT = {{"application/pdf", "pdf"},
+            {"application/msword", "doc"},
+//            {"application/msword", "dot"},
+            {"application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"},
+            {"application/vnd.openxmlformats-officedocument.wordprocessingml.template", "dotx"},
+            {"application/vnd.ms-excel", "xls"},
+//            {"application/vnd.ms-excel", "xlt"},
+            {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"},
+            {"application/vnd.openxmlformats-officedocument.spreadsheetml.template", "xltx"},
+            {"application/vnd.ms-powerpoint", "ppt"},
+//            {"application/vnd.ms-powerpoint", "pot"},
+//            {"application/vnd.ms-powerpoint", "pps"},
+            {"application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"},
+            {"application/vnd.openxmlformats-officedocument.presentationml.template", "potx"},
+            {"application/vnd.openxmlformats-officedocument.presentationml.slideshow", "ppsx"}};
+
+    protected static final Integer[] MIME_MAP_TABLE_PDF = {0};
+    protected static final Integer[] MIME_MAP_TABLE_DOC = {1, 2, 3};
+    protected static final Integer[] MIME_MAP_TABLE_XLS = {4, 5, 6};
+    protected static final Integer[] MIME_MAP_TABLE_PPT = {7, 8, 9, 10};
+
+
+    protected static final String PNG = "png";
+    protected static final String JPG = "jpg";
+    protected static final String JPEG = "jpeg";
+    protected static final String GIF = "gif";
+    protected static final String MP3 = "mp3";
+    protected static final String AAC = "aac";
+    protected static final String WAV = "wav";
+    protected static final String M4A = "m4a";
+    protected static final String MP4 = "mp4";
+    protected static final String _3GP = "3gp";
+    protected static final String TXT = "txt";
+    protected static final String XML = "xml";
+    protected static final String JSON = "json";
+    protected static final String DOC = "doc";
+    protected static final String DOT = "dot";
+    protected static final String DOCX = "docx";
+    protected static final String DOTX = "dotx";
+    protected static final String XLS = "xls";
+    protected static final String XLSX = "xlsx";
+    protected static final String PPT = "ppt";
+    protected static final String PPTX = "pptx";
+    protected static final String PDF = "pdf";
+    protected static final String ZIP = "zip";
+    protected static final String[] MIME_MAP_TABLE_PDF_R = {PDF};
+    protected static final String[] MIME_MAP_TABLE_DOC_R = {DOC, DOT, DOCX, DOTX};
+    protected static final String[] MIME_MAP_TABLE_XLS_R = {XLS, XLSX};
+    protected static final String[] MIME_MAP_TABLE_PPT_R = {PPT, PPTX};
+    protected static final String[] MIME_MAP_TABLE_TXT_R = {TXT, XML, JSON};
+    protected static final String[] MIME_MAP_TABLE_ALL_R = {TXT, XML, JSON, PDF, DOC, DOT, DOCX, DOTX, XLS, XLSX, PPT, PPTX};
 
     /**
      * init config
@@ -188,6 +242,7 @@ public abstract class IBridgeMediaLoader {
             if (TextUtils.isEmpty(value)) {
                 continue;
             }
+
             if (getConfig().chooseMode == SelectMimeType.ofVideo()) {
                 if (value.startsWith(PictureMimeType.MIME_TYPE_PREFIX_IMAGE) || value.startsWith(PictureMimeType.MIME_TYPE_PREFIX_AUDIO)) {
                     continue;
@@ -201,14 +256,111 @@ public abstract class IBridgeMediaLoader {
                     continue;
                 }
             }
-            index++;
-            stringBuilder.append(index == 0 ? " AND " : " OR ").append(MediaStore.MediaColumns.MIME_TYPE).append("='").append(value).append("'");
+            if (getConfig().chooseMode == SelectMimeType.ofDocument()) {
+                if (value.startsWith(PictureMimeType.MIME_TYPE_PREFIX_VIDEO)
+                        || value.startsWith(PictureMimeType.MIME_TYPE_PREFIX_IMAGE)
+                        || value.startsWith(PictureMimeType.MIME_TYPE_PREFIX_AUDIO)) {
+                    continue;
+                }
+            }
+
+            if (getConfig().chooseMode == SelectMimeType.ofDocument()) {
+//                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_DOC)) {
+                        index = getIndex(stringBuilder, index, MIME_MAP_TABLE_DOC);
+                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_XLS)) {
+                        index = getIndex(stringBuilder, index, MIME_MAP_TABLE_XLS);
+                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_PPT)) {
+                        index = getIndex(stringBuilder, index, MIME_MAP_TABLE_PPT);
+                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_PDF)) {
+                        index = getIndex(stringBuilder, index, MIME_MAP_TABLE_PDF);
+                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_TXT)) {
+                        index++;
+                        stringBuilder.append(index == 0 ? " " : " OR ").append(text);
+                    }
+//                } else {
+//                    if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_DOC)) {
+//                        index = getIndexR(stringBuilder, index, MIME_MAP_TABLE_DOC_R);
+//                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_XLS)) {
+//                        index = getIndexR(stringBuilder, index, MIME_MAP_TABLE_XLS_R);
+//                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_PPT)) {
+//                        index = getIndexR(stringBuilder, index, MIME_MAP_TABLE_PPT_R);
+//                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_PDF)) {
+//                        index = getIndexR(stringBuilder, index, MIME_MAP_TABLE_PDF_R);
+//                    } else if (Objects.equals(value, PictureMimeType.MIME_TYPE_PREFIX_DOCUMENT_TXT)) {
+//                        index = getIndexR(stringBuilder, index, MIME_MAP_TABLE_TXT_R);
+//                    }
+//                }
+            } else {
+                index++;
+                stringBuilder.append(index == 0 ? " AND " : " OR ").append(MediaStore.MediaColumns.MIME_TYPE).append("='").append(value).append("'");
+            }
+
         }
-        if (getConfig().chooseMode != SelectMimeType.ofVideo()) {
+        if (getConfig().chooseMode != SelectMimeType.ofVideo() && getConfig().chooseMode != SelectMimeType.ofDocument()) {
             if (!getConfig().isGif && !filterSet.contains(PictureMimeType.ofGIF())) {
                 stringBuilder.append(NOT_GIF);
             }
         }
+
+        if (getConfig().chooseMode == SelectMimeType.ofDocument() &&
+                stringBuilder.toString().isEmpty()) {
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                stringBuilder.append(text);
+                for (String[] strings : MIME_MAP_TABLE_DOCUMENT) {
+                    stringBuilder.append(" OR (")
+                            .append(MediaStore.MediaColumns.MIME_TYPE)
+                            .append("='")
+                            .append(strings[0]).append("')");
+                }
+//            } else {
+//                for (int i = 0; i < MIME_MAP_TABLE_ALL_R.length; i++) {
+//                    if (i == MIME_MAP_TABLE_ALL_R.length - 1) {
+//                        stringBuilder.append(MediaStore.Files.FileColumns.DATA)
+//                                .append(" LIKE '%.")
+//                                .append(MIME_MAP_TABLE_ALL_R[i])
+//                                .append("'");
+//                    } else {
+//                        stringBuilder.append(MediaStore.Files.FileColumns.DATA)
+//                                .append(" LIKE '%.")
+//                                .append(MIME_MAP_TABLE_ALL_R[i])
+//                                .append("'")
+//                                .append(" OR ");
+//                    }
+//                }
+//            }
+
+        }
+
         return stringBuilder.toString();
     }
+
+    private int getIndexR(StringBuilder stringBuilder, int index, String[] mimeMapTablePdfR) {
+        for (String s : mimeMapTablePdfR) {
+            index++;
+            if (index > 0) {
+                stringBuilder.append(" OR ");
+            }
+            stringBuilder.append(MediaStore.Files.FileColumns.DATA)
+                    .append(" LIKE '%.")
+                    .append(s)
+                    .append("'");
+        }
+        return index;
+    }
+
+    private int getIndex(StringBuilder stringBuilder, int index, Integer[] integers) {
+        for (Integer integer : integers) {
+            index++;
+            String[] strings = MIME_MAP_TABLE_DOCUMENT[integer];
+            stringBuilder.append(
+                    index == 0 ? "(" : " OR (")
+                    .append(MediaStore.MediaColumns.MIME_TYPE)
+                    .append("='")
+                    .append(strings[0]).append("')");
+        }
+        return index;
+    }
+
+
 }

@@ -2,6 +2,7 @@ package com.luck.picture.lib.loader;
 
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -28,6 +29,7 @@ import com.luck.picture.lib.utils.ValueOf;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +116,26 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
         }
     }
 
+    private static String getSelectionArgsForDocumentCondition(String sizeCondition, String queryMimeCondition) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            stringBuilder/*.append(MediaStore.Files.FileColumns.MEDIA_TYPE)
+                    .append("=?")
+                    .append(" AND ")*/.append(sizeCondition);
+            if (!TextUtils.isEmpty(queryMimeCondition)) {
+                stringBuilder.append(" AND ( ").append(queryMimeCondition).append(" ) ");
+            }
+        } else {
+        stringBuilder.append(MediaStore.Files.FileColumns.MEDIA_TYPE)
+                .append("=").append(MediaStore.Files.FileColumns.MEDIA_TYPE_NONE)
+                .append(" AND ").append(sizeCondition);
+        if (!TextUtils.isEmpty(queryMimeCondition)) {
+            stringBuilder.append(" AND ( ").append(queryMimeCondition).append(" ) ");
+        }
+        }
+        return stringBuilder.toString();
+    }
+
     /**
      * Gets a file of the specified type
      *
@@ -123,6 +145,11 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
     private static String[] getSelectionArgsForPageSingleMediaType(int mediaType, long bucketId) {
         return bucketId == PictureConfig.ALL ? new String[]{String.valueOf(mediaType)} : new String[]{String.valueOf(mediaType), ValueOf.toString(bucketId)};
     }
+
+    private static String[] getSelectionArgsForPageSingleMediaType(long bucketId) {
+        return bucketId == PictureConfig.ALL ? null : new String[]{ValueOf.toString(bucketId)};
+    }
+
 
     @Override
     public String getAlbumFirstCover(long bucketId) {
@@ -248,9 +275,17 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
         PictureThreadUtils.executeByIo(new PictureThreadUtils.SimpleTask<List<LocalMediaFolder>>() {
             @Override
             public List<LocalMediaFolder> doInBackground() {
+                String selection = getSelection();
+                Log.d("loadAllAlbum", selection);
+                String[] selectionArgs = getSelectionArgs();
+                if (selectionArgs != null) {
+                    Log.d("loadAllAlbum", Arrays.toString(selectionArgs));
+                }
+                String sortOrder = getSortOrder();
+                Log.d("loadAllAlbum", sortOrder);
                 Cursor data = getContext().getContentResolver().query(QUERY_URI,
                         isWithAllQuery() ? PROJECTION : ALL_PROJECTION,
-                        getSelection(), getSelectionArgs(), getSortOrder());
+                        selection, selectionArgs, sortOrder);
                 try {
                     if (data != null) {
                         int count = data.getCount();
@@ -465,6 +500,10 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 //  Gets the video or audio
                 return getPageSelectionArgsForAudioMediaCondition(bucketId, queryMimeCondition, durationCondition, sizeCondition);
+            case SelectMimeType.TYPE_DOCUMENT:
+                //  Gets the video or audio
+                return getPageSelectionArgsForDocumentCondition(bucketId, queryMimeCondition, sizeCondition);
+
         }
         return null;
     }
@@ -510,6 +549,31 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
         }
     }
 
+
+    private static String getPageSelectionArgsForDocumentCondition(long bucketId, String queryMimeCondition, String sizeCondition) {
+        StringBuilder stringBuilder = new StringBuilder();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//            stringBuilder.append(MediaStore.Files.FileColumns.MEDIA_TYPE).append("=?");
+//            if (!TextUtils.isEmpty(queryMimeCondition)) {
+//                stringBuilder.append(" AND (").append(queryMimeCondition).append(")");
+//            }
+//        } else {
+        stringBuilder.append(MediaStore.Files.FileColumns.MEDIA_TYPE).append("=")
+                .append(MediaStore.Files.FileColumns.MEDIA_TYPE_NONE);
+        if (!TextUtils.isEmpty(queryMimeCondition)) {
+            stringBuilder.append(" AND (")
+                    .append(queryMimeCondition).append(")");
+        }
+//        }
+
+        if (bucketId == PictureConfig.ALL) {
+            return stringBuilder.append(" AND ").append(sizeCondition).toString();
+        } else {
+            return stringBuilder.append(" AND ").append(COLUMN_BUCKET_ID).append("=? AND ").append(sizeCondition).toString();
+        }
+    }
+
+
     private String[] getPageSelectionArgs(long bucketId) {
         switch (getConfig().chooseMode) {
             case SelectMimeType.TYPE_ALL:
@@ -535,6 +599,14 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 // Get audio
                 return getSelectionArgsForPageSingleMediaType(MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO, bucketId);
+            case SelectMimeType.TYPE_DOCUMENT:
+                // Get document
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                    return getSelectionArgsForPageSingleMediaType(MediaStore.Files.FileColumns.MEDIA_TYPE_DOCUMENT, bucketId);
+//                } else {
+                return getSelectionArgsForPageSingleMediaType(bucketId);
+//                }
+
         }
         return null;
     }
@@ -557,6 +629,10 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 // Access to the audio
                 return getSelectionArgsForAudioMediaCondition(durationCondition, queryMimeCondition);
+            case SelectMimeType.TYPE_DOCUMENT:
+                // Access to the audio
+                return getSelectionArgsForDocumentCondition(fileSizeCondition, queryMimeCondition);
+
         }
         return null;
     }
@@ -578,6 +654,12 @@ public final class LocalMediaPageLoader extends IBridgeMediaLoader {
             case SelectMimeType.TYPE_AUDIO:
                 // Get audio
                 return new String[]{String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO)};
+//            case SelectMimeType.TYPE_DOCUMENT:
+//                // Get document
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                    return new String[]{String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_DOCUMENT)};
+//                }
+
         }
         return null;
     }

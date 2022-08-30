@@ -17,6 +17,7 @@ import com.luck.picture.lib.loader.LocalMediaLoader;
 import com.luck.picture.lib.loader.LocalMediaPageLoader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -87,6 +88,19 @@ public class PictureSelectionQueryModel {
     public PictureSelectionQueryModel setQuerySortOrder(String sortOrder) {
         if (!TextUtils.isEmpty(sortOrder)) {
             selectionConfig.sortOrder = sortOrder;
+        }
+        return this;
+    }
+
+    /**
+     * query only mimeType
+     *
+     * @param mimeTypes Use example {@link { image/jpeg or image/png ... }}
+     * @return
+     */
+    public PictureSelectionQueryModel setQueryOnlyMimeType(String... mimeTypes) {
+        if (mimeTypes != null && mimeTypes.length > 0) {
+            selectionConfig.queryOnlyList.addAll(Arrays.asList(mimeTypes));
         }
         return this;
     }
