@@ -99,6 +99,12 @@ public class MediaUtils {
             return "video/mp4";
         } else if (url.toLowerCase().endsWith(".avi")) {
             return "video/avi";
+        } else if (url.toLowerCase().endsWith(".mp3")) {
+            return "audio/mpeg";
+        } else if (url.toLowerCase().endsWith(".amr")) {
+            return "audio/amr";
+        } else if (url.toLowerCase().endsWith(".m4a")) {
+            return "audio/mpeg";
         }
         return null;
     }
@@ -184,6 +190,9 @@ public class MediaUtils {
      */
     public static MediaExtraInfo getImageSize(Context context, String url) {
         MediaExtraInfo mediaExtraInfo = new MediaExtraInfo();
+        if (PictureMimeType.isHasHttp(url)) {
+            return mediaExtraInfo;
+        }
         InputStream inputStream = null;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
@@ -202,6 +211,31 @@ public class MediaUtils {
             PictureFileUtils.close(inputStream);
         }
         return mediaExtraInfo;
+    }
+
+    /**
+     * get Local image width or height
+     *
+     * @param context
+     * @param url
+     * @param call
+     */
+    public static void getImageSize(Context context, String url, OnCallbackListener<MediaExtraInfo> call) {
+        PictureThreadUtils.executeByIo(new PictureThreadUtils.SimpleTask<MediaExtraInfo>() {
+
+            @Override
+            public MediaExtraInfo doInBackground() {
+                return getImageSize(context, url);
+            }
+
+            @Override
+            public void onSuccess(MediaExtraInfo result) {
+                PictureThreadUtils.cancel(this);
+                if (call != null) {
+                    call.onCall(result);
+                }
+            }
+        });
     }
 
     /**
@@ -239,6 +273,9 @@ public class MediaUtils {
      */
     public static MediaExtraInfo getVideoSize(Context context, String url) {
         MediaExtraInfo mediaExtraInfo = new MediaExtraInfo();
+        if (PictureMimeType.isHasHttp(url)) {
+            return mediaExtraInfo;
+        }
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             if (PictureMimeType.isContent(url)) {
@@ -262,7 +299,11 @@ public class MediaUtils {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            retriever.release();
+            try {
+                retriever.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return mediaExtraInfo;
     }
@@ -276,6 +317,9 @@ public class MediaUtils {
      */
     public static MediaExtraInfo getAudioSize(Context context, String url) {
         MediaExtraInfo mediaExtraInfo = new MediaExtraInfo();
+        if (PictureMimeType.isHasHttp(url)) {
+            return mediaExtraInfo;
+        }
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             if (PictureMimeType.isContent(url)) {
@@ -287,7 +331,11 @@ public class MediaUtils {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            retriever.release();
+            try {
+                retriever.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return mediaExtraInfo;
     }

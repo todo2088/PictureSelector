@@ -27,6 +27,7 @@ import com.luck.picture.lib.engine.UriToFileTransformEngine;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.interfaces.OnBitmapWatermarkEventListener;
 import com.luck.picture.lib.interfaces.OnCameraInterceptListener;
+import com.luck.picture.lib.interfaces.OnCustomLoadingListener;
 import com.luck.picture.lib.interfaces.OnPermissionDeniedListener;
 import com.luck.picture.lib.interfaces.OnPermissionDescriptionListener;
 import com.luck.picture.lib.interfaces.OnPermissionsInterceptListener;
@@ -70,6 +71,17 @@ public final class PictureSelectionCameraModel {
      */
     public PictureSelectionCameraModel setLanguage(int language) {
         selectionConfig.language = language;
+        return this;
+    }
+
+    /**
+     * Set App default Language
+     *
+     * @param defaultLanguage default language {@link LanguageConfig}
+     * @return PictureSelectionModel
+     */
+    public PictureSelectionCameraModel setDefaultLanguage(int defaultLanguage) {
+        selectionConfig.defaultLanguage = defaultLanguage;
         return this;
     }
 
@@ -216,7 +228,6 @@ public final class PictureSelectionCameraModel {
      * Custom limit tips
      *
      * @param listener
-     * @return
      */
     public PictureSelectionCameraModel setSelectLimitTipsListener(OnSelectLimitTipsListener listener) {
         PictureSelectionConfig.onSelectLimitTipsListener = listener;
@@ -250,6 +261,17 @@ public final class PictureSelectionCameraModel {
     }
 
     /**
+     * Custom show loading dialog
+     *
+     * @param listener
+     * @return
+     */
+    public PictureSelectionCameraModel setCustomLoadingListener(OnCustomLoadingListener listener) {
+        PictureSelectionConfig.onCustomLoadingListener = listener;
+        return this;
+    }
+
+    /**
      * Do you want to open a foreground service to prevent the system from reclaiming the memory
      * of some models due to the use of cameras
      *
@@ -258,19 +280,6 @@ public final class PictureSelectionCameraModel {
      */
     public PictureSelectionCameraModel isCameraForegroundService(boolean isForeground) {
         selectionConfig.isCameraForegroundService = isForeground;
-        return this;
-    }
-
-    /**
-     * Returns whether the calling app has All Files Access on the primary shared/external storage media.
-     * Declaring the permission Manifest.permission.MANAGE_EXTERNAL_STORAGE isn't enough to gain the access.
-     * To request access, use android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION.
-     *
-     * @param isAllFilesAccess
-     * @return
-     */
-    public PictureSelectionCameraModel isAllFilesAccessOf11(boolean isAllFilesAccess) {
-        selectionConfig.isAllFilesAccess = isAllFilesAccess;
         return this;
     }
 
@@ -299,6 +308,17 @@ public final class PictureSelectionCameraModel {
     public PictureSelectionCameraModel isOriginalControl(boolean isOriginalControl) {
         selectionConfig.isOriginalControl = isOriginalControl;
         selectionConfig.isCheckOriginalImage = isOriginalControl;
+        return this;
+    }
+
+    /**
+     * Select original image to skip compression
+     *
+     * @param isOriginalSkipCompress
+     * @return
+     */
+    public PictureSelectionCameraModel isOriginalSkipCompress(boolean isOriginalSkipCompress) {
+        selectionConfig.isOriginalSkipCompress = isOriginalSkipCompress;
         return this;
     }
 

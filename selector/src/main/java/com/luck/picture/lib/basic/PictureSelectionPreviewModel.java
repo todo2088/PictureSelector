@@ -19,6 +19,7 @@ import com.luck.picture.lib.config.SelectMimeType;
 import com.luck.picture.lib.engine.ImageEngine;
 import com.luck.picture.lib.engine.VideoPlayerEngine;
 import com.luck.picture.lib.entity.LocalMedia;
+import com.luck.picture.lib.interfaces.OnCustomLoadingListener;
 import com.luck.picture.lib.interfaces.OnExternalPreviewEventListener;
 import com.luck.picture.lib.interfaces.OnInjectActivityPreviewListener;
 import com.luck.picture.lib.interfaces.OnInjectLayoutResourceListener;
@@ -109,6 +110,17 @@ public final class PictureSelectionPreviewModel {
     }
 
     /**
+     * Set App default Language
+     *
+     * @param defaultLanguage default language {@link LanguageConfig}
+     * @return PictureSelectionModel
+     */
+    public PictureSelectionPreviewModel setDefaultLanguage(int defaultLanguage) {
+        selectionConfig.defaultLanguage = defaultLanguage;
+        return this;
+    }
+
+    /**
      * Intercept custom inject layout events, Users can implement their own layout
      * on the premise that the view ID must be consistent
      *
@@ -156,11 +168,22 @@ public final class PictureSelectionPreviewModel {
     /**
      * It is forbidden to correct or synchronize the width and height of the video
      *
-     * @param isEnableVideoSize
+     * @param isEnableVideoSize Use {@link .isSyncWidthAndHeight()}
+     */
+    @Deprecated
+    public PictureSelectionPreviewModel isEnableVideoSize(boolean isEnableVideoSize) {
+        selectionConfig.isSyncWidthAndHeight = isEnableVideoSize;
+        return this;
+    }
+
+    /**
+     * It is forbidden to correct or synchronize the width and height of the video
+     *
+     * @param isSyncWidthAndHeight
      * @return
      */
-    public PictureSelectionPreviewModel isEnableVideoSize(boolean isEnableVideoSize) {
-        selectionConfig.isEnableVideoSize = isEnableVideoSize;
+    public PictureSelectionPreviewModel isSyncWidthAndHeight(boolean isSyncWidthAndHeight) {
+        selectionConfig.isSyncWidthAndHeight = isSyncWidthAndHeight;
         return this;
     }
 
@@ -240,6 +263,17 @@ public final class PictureSelectionPreviewModel {
      */
     public PictureSelectionPreviewModel setInjectActivityPreviewFragment(OnInjectActivityPreviewListener listener) {
         PictureSelectionConfig.onInjectActivityPreviewListener = listener;
+        return this;
+    }
+
+    /**
+     * Custom show loading dialog
+     *
+     * @param listener
+     * @return
+     */
+    public PictureSelectionPreviewModel setCustomLoadingListener(OnCustomLoadingListener listener) {
+        PictureSelectionConfig.onCustomLoadingListener = listener;
         return this;
     }
 

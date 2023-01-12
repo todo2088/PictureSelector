@@ -5,13 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.luck.picture.lib.config.PictureConfig;
 import com.luck.picture.lib.config.SelectMimeType;
 import com.luck.picture.lib.entity.LocalMedia;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 
 /**
@@ -22,8 +24,8 @@ import java.util.ArrayList;
 
 public final class PictureSelector {
 
-    private final WeakReference<Activity> mActivity;
-    private final WeakReference<Fragment> mFragment;
+    private final SoftReference<Activity> mActivity;
+    private final SoftReference<Fragment> mFragment;
 
     private PictureSelector(Activity activity) {
         this(activity, null);
@@ -34,8 +36,8 @@ public final class PictureSelector {
     }
 
     private PictureSelector(Activity activity, Fragment fragment) {
-        mActivity = new WeakReference<>(activity);
-        mFragment = new WeakReference<>(fragment);
+        mActivity = new SoftReference<>(activity);
+        mFragment = new SoftReference<>(fragment);
     }
 
     /**
@@ -54,7 +56,17 @@ public final class PictureSelector {
      * @param activity
      * @return PictureSelector instance.
      */
-    public static PictureSelector create(Activity activity) {
+    public static PictureSelector create(AppCompatActivity activity) {
+        return new PictureSelector(activity);
+    }
+
+    /**
+     * Start PictureSelector for Activity.
+     *
+     * @param activity
+     * @return PictureSelector instance.
+     */
+    public static PictureSelector create(FragmentActivity activity) {
         return new PictureSelector(activity);
     }
 

@@ -26,6 +26,7 @@ import com.luck.picture.lib.engine.SandboxFileEngine;
 import com.luck.picture.lib.engine.UriToFileTransformEngine;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.interfaces.OnBitmapWatermarkEventListener;
+import com.luck.picture.lib.interfaces.OnCustomLoadingListener;
 import com.luck.picture.lib.interfaces.OnPermissionDeniedListener;
 import com.luck.picture.lib.interfaces.OnPermissionDescriptionListener;
 import com.luck.picture.lib.interfaces.OnPermissionsInterceptListener;
@@ -69,19 +70,6 @@ public final class PictureSelectionSystemModel {
     }
 
     /**
-     * Returns whether the calling app has All Files Access on the primary shared/external storage media.
-     * Declaring the permission Manifest.permission.MANAGE_EXTERNAL_STORAGE isn't enough to gain the access.
-     * To request access, use android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION.
-     *
-     * @param isAllFilesAccess
-     * @return
-     */
-    public PictureSelectionSystemModel isAllFilesAccessOf11(boolean isAllFilesAccess) {
-        selectionConfig.isAllFilesAccess = isAllFilesAccess;
-        return this;
-    }
-
-    /**
      * Do you need to display the original controller
      * <p>
      * It needs to be used with setSandboxFileEngine
@@ -106,6 +94,17 @@ public final class PictureSelectionSystemModel {
         if (mimeTypes != null && mimeTypes.length > 0) {
             selectionConfig.skipCropList.addAll(Arrays.asList(mimeTypes));
         }
+        return this;
+    }
+
+    /**
+     * Select original image to skip compression
+     *
+     * @param isOriginalSkipCompress
+     * @return
+     */
+    public PictureSelectionSystemModel isOriginalSkipCompress(boolean isOriginalSkipCompress) {
+        selectionConfig.isOriginalSkipCompress = isOriginalSkipCompress;
         return this;
     }
 
@@ -284,7 +283,6 @@ public final class PictureSelectionSystemModel {
      * Custom limit tips
      *
      * @param listener
-     * @return
      */
     public PictureSelectionSystemModel setSelectLimitTipsListener(OnSelectLimitTipsListener listener) {
         PictureSelectionConfig.onSelectLimitTipsListener = listener;
@@ -325,6 +323,17 @@ public final class PictureSelectionSystemModel {
         if (selectionConfig.chooseMode != SelectMimeType.ofAudio()) {
             PictureSelectionConfig.onVideoThumbnailEventListener = listener;
         }
+        return this;
+    }
+
+    /**
+     * Custom show loading dialog
+     *
+     * @param listener
+     * @return
+     */
+    public PictureSelectionSystemModel setCustomLoadingListener(OnCustomLoadingListener listener) {
+        PictureSelectionConfig.onCustomLoadingListener = listener;
         return this;
     }
 

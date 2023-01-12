@@ -35,6 +35,7 @@ import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.entity.LocalMediaFolder;
 import com.luck.picture.lib.interfaces.OnBitmapWatermarkEventListener;
 import com.luck.picture.lib.interfaces.OnCameraInterceptListener;
+import com.luck.picture.lib.interfaces.OnCustomLoadingListener;
 import com.luck.picture.lib.interfaces.OnGridItemSelectAnimListener;
 import com.luck.picture.lib.interfaces.OnInjectLayoutResourceListener;
 import com.luck.picture.lib.interfaces.OnMediaEditInterceptListener;
@@ -106,6 +107,17 @@ public final class PictureSelectionModel {
      */
     public PictureSelectionModel setLanguage(int language) {
         selectionConfig.language = language;
+        return this;
+    }
+
+    /**
+     * Set App default Language
+     *
+     * @param defaultLanguage default language {@link LanguageConfig}
+     * @return PictureSelectionModel
+     */
+    public PictureSelectionModel setDefaultLanguage(int defaultLanguage) {
+        selectionConfig.defaultLanguage = defaultLanguage;
         return this;
     }
 
@@ -367,7 +379,6 @@ public final class PictureSelectionModel {
      * Custom limit tips
      *
      * @param listener
-     * @return
      */
     public PictureSelectionModel setSelectLimitTipsListener(OnSelectLimitTipsListener listener) {
         PictureSelectionConfig.onSelectLimitTipsListener = listener;
@@ -445,6 +456,17 @@ public final class PictureSelectionModel {
     }
 
     /**
+     * Custom show loading dialog
+     *
+     * @param listener
+     * @return
+     */
+    public PictureSelectionModel setCustomLoadingListener(OnCustomLoadingListener listener) {
+        PictureSelectionConfig.onCustomLoadingListener = listener;
+        return this;
+    }
+
+    /**
      * Do you want to open a foreground service to prevent the system from reclaiming the memory
      * of some models due to the use of cameras
      *
@@ -456,6 +478,18 @@ public final class PictureSelectionModel {
         return this;
     }
 
+    /**
+     * Android 10 preloads data first, then asynchronously obtains album list
+     * <p>
+     * Please consult the developer for detailed reasons
+     * </p>
+     *
+     * @param isPreloadFirst Enable preload by default
+     */
+    public PictureSelectionModel isPreloadFirst(boolean isPreloadFirst) {
+        selectionConfig.isPreloadFirst = isPreloadFirst;
+        return this;
+    }
 
     /**
      * Change the desired orientation of this activity.  If the activity
@@ -1131,11 +1165,22 @@ public final class PictureSelectionModel {
     /**
      * It is forbidden to correct or synchronize the width and height of the video
      *
-     * @param isEnableVideoSize
+     * @param isEnableVideoSize Use {@link .isSyncWidthAndHeight()}
+     */
+    @Deprecated
+    public PictureSelectionModel isEnableVideoSize(boolean isEnableVideoSize) {
+        selectionConfig.isSyncWidthAndHeight = isEnableVideoSize;
+        return this;
+    }
+
+    /**
+     * It is forbidden to correct or synchronize the width and height of the video
+     *
+     * @param isSyncWidthAndHeight
      * @return
      */
-    public PictureSelectionModel isEnableVideoSize(boolean isEnableVideoSize) {
-        selectionConfig.isEnableVideoSize = isEnableVideoSize;
+    public PictureSelectionModel isSyncWidthAndHeight(boolean isSyncWidthAndHeight) {
+        selectionConfig.isSyncWidthAndHeight = isSyncWidthAndHeight;
         return this;
     }
 
@@ -1213,15 +1258,13 @@ public final class PictureSelectionModel {
     }
 
     /**
-     * Returns whether the calling app has All Files Access on the primary shared/external storage media.
-     * Declaring the permission Manifest.permission.MANAGE_EXTERNAL_STORAGE isn't enough to gain the access.
-     * To request access, use android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION.
+     * Select original image to skip compression
      *
-     * @param isAllFilesAccess
+     * @param isOriginalSkipCompress
      * @return
      */
-    public PictureSelectionModel isAllFilesAccessOf11(boolean isAllFilesAccess) {
-        selectionConfig.isAllFilesAccess = isAllFilesAccess;
+    public PictureSelectionModel isOriginalSkipCompress(boolean isOriginalSkipCompress) {
+        selectionConfig.isOriginalSkipCompress = isOriginalSkipCompress;
         return this;
     }
 

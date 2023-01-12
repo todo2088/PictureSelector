@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.Display;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -240,7 +241,12 @@ public class CustomCameraView extends RelativeLayout implements CameraXOrientati
         mCameraPreviewView.post(new Runnable() {
             @Override
             public void run() {
-                displayId = mCameraPreviewView.getDisplay().getDisplayId();
+                if (mCameraPreviewView != null) {
+                    Display display = mCameraPreviewView.getDisplay();
+                    if (display != null) {
+                        displayId = display.getDisplayId();
+                    }
+                }
             }
         });
 
@@ -407,6 +413,7 @@ public class CustomCameraView extends RelativeLayout implements CameraXOrientati
                                 outPutCameraFileName, imageFormat, outPutCameraDir);
                         if (FileUtils.copyPath(activity, outputPath, cameraFile.getAbsolutePath())) {
                             outputPath = cameraFile.getAbsolutePath();
+                            SimpleCameraX.putOutputUri(activity.getIntent(), Uri.fromFile(cameraFile));
                         }
                     }
                 }
@@ -902,13 +909,13 @@ public class CustomCameraView extends RelativeLayout implements CameraXOrientati
                         // 这种角度拍出来的图片宽比高大，所以使用ScaleType.FIT_CENTER缩放模式
                         if (targetRotation == Surface.ROTATION_90 || targetRotation == Surface.ROTATION_270) {
                             mImagePreview.setAdjustViewBounds(true);
-                            View mImagePreviewBackground = mImagePreviewBgReference.get();
-                            if (mImagePreviewBackground != null) {
-                                mImagePreviewBackground.animate().alpha(1F).setDuration(220).start();
-                            }
                         } else {
                             mImagePreview.setAdjustViewBounds(false);
-                            mImagePreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            mImagePreview.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        }
+                        View mImagePreviewBackground = mImagePreviewBgReference.get();
+                        if (mImagePreviewBackground != null) {
+                            mImagePreviewBackground.animate().alpha(1F).setDuration(220).start();
                         }
                     }
                     ImageCallbackListener imageCallbackListener = mImageCallbackListenerReference.get();

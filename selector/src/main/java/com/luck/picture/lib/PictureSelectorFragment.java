@@ -3,7 +3,6 @@ package com.luck.picture.lib;
 import android.annotation.SuppressLint;
 import android.app.Service;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.text.TextUtils;
@@ -62,7 +61,6 @@ import com.luck.picture.lib.utils.AnimUtils;
 import com.luck.picture.lib.utils.DateUtils;
 import com.luck.picture.lib.utils.DensityUtil;
 import com.luck.picture.lib.utils.DoubleUtils;
-import com.luck.picture.lib.utils.SdkVersionUtils;
 import com.luck.picture.lib.utils.StyleUtils;
 import com.luck.picture.lib.utils.ToastUtils;
 import com.luck.picture.lib.utils.ValueOf;
@@ -436,17 +434,15 @@ public class PictureSelectorFragment extends PictureCommonFragment
 
     private void requestLoadData() {
         mAdapter.setDisplayCamera(isDisplayCamera);
-        boolean isCheckReadStorage = SdkVersionUtils.isR() && config.isAllFilesAccess
-                ? Environment.isExternalStorageManager() : PermissionChecker.isCheckReadStorage(getContext());
-        if (isCheckReadStorage) {
+        if (PermissionChecker.isCheckReadStorage(config.chooseMode, getContext())) {
             beginLoadData();
         } else {
-            onPermissionExplainEvent(true, PermissionConfig.READ_WRITE_EXTERNAL_STORAGE);
+            String[] storagePermissionArray = PermissionConfig.getReadWritePermissionArray(config.chooseMode);
+            onPermissionExplainEvent(true, storagePermissionArray);
             if (PictureSelectionConfig.onPermissionsEventListener != null) {
-                onApplyPermissionsEvent(PermissionEvent.EVENT_SOURCE_DATA, PermissionConfig.READ_WRITE_EXTERNAL_STORAGE);
+                onApplyPermissionsEvent(PermissionEvent.EVENT_SOURCE_DATA, storagePermissionArray);
             } else {
-                PermissionChecker.getInstance().requestPermissions(this,
-                        PermissionConfig.READ_WRITE_EXTERNAL_STORAGE, new PermissionResultCallback() {
+                PermissionChecker.getInstance().requestPermissions(this,storagePermissionArray, new PermissionResultCallback() {
                             @Override
                             public void onGranted() {
                                 beginLoadData();
@@ -454,7 +450,7 @@ public class PictureSelectorFragment extends PictureCommonFragment
 
                             @Override
                             public void onDenied() {
-                                handlePermissionDenied(PermissionConfig.READ_WRITE_EXTERNAL_STORAGE);
+                                handlePermissionDenied(storagePermissionArray);
                             }
                         });
             }
@@ -499,15 +495,7 @@ public class PictureSelectorFragment extends PictureCommonFragment
         if (PictureSelectionConfig.onPermissionsEventListener != null) {
             isHasPermissions = PictureSelectionConfig.onPermissionsEventListener.hasPermissions(this, permissions);
         } else {
-            if (isHasCamera) {
-                isHasPermissions = PermissionChecker.isCheckSelfPermission(getContext(), permissions);
-            } else {
-                if (SdkVersionUtils.isR() && config.isAllFilesAccess) {
-                    isHasPermissions = Environment.isExternalStorageManager();
-                } else {
-                    isHasPermissions = PermissionChecker.isCheckSelfPermission(getContext(), permissions);
-                }
-            }
+            isHasPermissions = PermissionChecker.isCheckSelfPermission(getContext(), permissions);
         }
         if (isHasPermissions) {
             if (isHasCamera) {
@@ -629,36 +617,64 @@ public class PictureSelectorFragment extends PictureCommonFragment
                     new OnQueryAllAlbumListener<LocalMediaFolder>() {
                         @Override
                         public void onComplete(List<LocalMediaFolder> result) {
-                            handleAllAlbumData(result);
+                            handleAllAlbumData(false, result);
                         }
                     });
         } else {
+            boolean isPreload = preloadPageFirstData();
             mLoader.loadAllAlbum(new OnQueryAllAlbumListener<LocalMediaFolder>() {
 
                 @Override
                 public void onComplete(List<LocalMediaFolder> result) {
-                    handleAllAlbumData(result);
+                    handleAllAlbumData(isPreload, result);
                 }
             });
         }
     }
 
-    private void handleAllAlbumData(List<LocalMediaFolder> result) {
+    private boolean preloadPageFirstData() {
+        boolean isPreload = false;
+        if (config.isPageStrategy && config.isPreloadFirst) {
+            LocalMediaFolder firstFolder = new LocalMediaFolder();
+            firstFolder.setBucketId(PictureConfig.ALL);
+            if (TextUtils.isEmpty(config.defaultAlbumName)) {
+                titleBar.setTitle(config.chooseMode == SelectMimeType.ofAudio() ? requireContext().getString(R.string.ps_all_audio) : requireContext().getString(R.string.ps_camera_roll));
+            } else {
+                titleBar.setTitle(config.defaultAlbumName);
+            }
+            firstFolder.setFolderName(titleBar.getTitleText());
+            SelectedManager.setCurrentLocalMediaFolder(firstFolder);
+            loadFirstPageMediaData(firstFolder.getBucketId());
+            isPreload = true;
+        }
+        return isPreload;
+    }
+
+    private void handleAllAlbumData(boolean isPreload, List<LocalMediaFolder> result) {
         if (ActivityCompatHelper.isDestroy(getActivity())) {
             return;
         }
         if (result.size() > 0) {
             LocalMediaFolder firstFolder;
-            if (SelectedManager.getCurrentLocalMediaFolder() != null) {
-                firstFolder = SelectedManager.getCurrentLocalMediaFolder();
-            } else {
+            if (isPreload) {
                 firstFolder = result.get(0);
                 SelectedManager.setCurrentLocalMediaFolder(firstFolder);
+            } else {
+                if (SelectedManager.getCurrentLocalMediaFolder() != null) {
+                    firstFolder = SelectedManager.getCurrentLocalMediaFolder();
+                } else {
+                    firstFolder = result.get(0);
+                    SelectedManager.setCurrentLocalMediaFolder(firstFolder);
+                }
             }
             titleBar.setTitle(firstFolder.getFolderName());
             albumListPopWindow.bindAlbumData(result);
             if (config.isPageStrategy) {
-                loadFirstPageMediaData(firstFolder.getBucketId());
+                if (config.isPreloadFirst) {
+                    mRecycler.setEnabledLoadMore(true);
+                } else {
+                    loadFirstPageMediaData(firstFolder.getBucketId());
+                }
             } else {
                 setAdapterData(firstFolder.getData());
             }
@@ -669,6 +685,7 @@ public class PictureSelectorFragment extends PictureCommonFragment
 
     @Override
     public void loadFirstPageMediaData(long firstBucketId) {
+        mPage = 1;
         mRecycler.setEnabledLoadMore(true);
         if (PictureSelectionConfig.loaderDataEngine != null) {
             PictureSelectionConfig.loaderDataEngine.loadFirstPageMediaData(getContext(), firstBucketId,
@@ -680,7 +697,7 @@ public class PictureSelectorFragment extends PictureCommonFragment
                         }
                     });
         } else {
-            mLoader.loadPageMediaData(firstBucketId, 1, mPage * config.pageSize,
+            mLoader.loadPageMediaData(firstBucketId, mPage, mPage * config.pageSize,
                     new OnQueryDataResultListener<LocalMedia>() {
                         @Override
                         public void onComplete(ArrayList<LocalMedia> result, boolean isHasMore) {
@@ -1186,7 +1203,8 @@ public class PictureSelectorFragment extends PictureCommonFragment
         allFolder.setData(mAdapter.getData());
         allFolder.setBucketId(PictureConfig.ALL);
         allFolder.setFolderTotalNum(isAddSameImp(allFolder.getFolderTotalNum()) ? allFolder.getFolderTotalNum() : allFolder.getFolderTotalNum() + 1);
-        if (SelectedManager.getCurrentLocalMediaFolder() == null) {
+        LocalMediaFolder currentLocalMediaFolder = SelectedManager.getCurrentLocalMediaFolder();
+        if (currentLocalMediaFolder == null || currentLocalMediaFolder.getFolderTotalNum() == 0) {
             SelectedManager.setCurrentLocalMediaFolder(allFolder);
         }
         // 先查找Camera目录，没有找到则创建一个Camera目录
